@@ -45,7 +45,7 @@ fn main() -> color_eyre::Result<()> {
             // Append characters to the left string
             rightString.push(c);
             
-            // Check if the leftString contains a word in the numbers array
+            // Check if the rightString reversed contains a word in the numbers array
             for (index, number) in numbers.iter().enumerate() {
                 if reverse(&rightString).contains(number) {
                     last_number_str = (index + 1).to_string().chars().next().unwrap();
