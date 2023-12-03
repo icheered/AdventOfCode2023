@@ -76,11 +76,9 @@ fn display_grid(grid: &Vec<Vec<char>>) {
     }
 }
 
-fn main() -> color_eyre::Result<()> {
-    color_eyre::install()?;
-
+pub fn solve(input: &str) -> i32 {
+    let lines = input.lines();
     // Read the input as a 2D array
-    let lines = include_str!("input.txt").lines();
     let grid: Vec<Vec<char>> = lines
         .map(|line| line.chars().collect())
         .collect();
@@ -111,7 +109,7 @@ fn main() -> color_eyre::Result<()> {
                     number.push(line[i]);
                     i += 1;
                 }
-                sum += number.parse::<usize>()?;
+                sum += number.parse::<usize>().unwrap();
 
                 // Update col to skip over the number we just processed
                 col = i;
@@ -120,10 +118,7 @@ fn main() -> color_eyre::Result<()> {
             }
         }
     }
-
-    println!("Sum: {}", sum);
-
-
-
-    Ok(())
+    return sum as i32;
 }
+
+
