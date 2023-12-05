@@ -17,63 +17,6 @@ struct Data {
     converters: Vec<Converter>,
 }
 
-// fn calculate_total_seed_number(input: Vec<i64>) -> i64 {
-//     let mut total = 0;
-//     for chunk in input.chunks_exact(2) {
-//         if let [start, count] = [chunk[0], chunk[1]] {
-//             total += count;
-//         }
-//     }
-//     total
-// }
-
-// use indicatif::{ProgressBar, ProgressStyle};
-// fn generate_seed_numbers(input: Vec<i64>) -> Vec<i64> {
-//     let total_size: usize = input
-//         .chunks_exact(2)
-//         .map(|chunk| chunk.get(1).copied().unwrap_or(0) as usize)
-//         .sum();
-
-//     let bar = ProgressBar::new(100);
-//     let style = ProgressStyle::default_bar()
-//         .template("{spinner:.green} [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}")
-//         .unwrap_or_else(|e| {
-//             eprintln!("Error setting progress bar style: {}", e);
-//             ProgressStyle::default_bar()
-//         });
-
-//     bar.set_style(style);
-
-//     let mut result = Vec::with_capacity(total_size);
-//     let mut current_index = 0;
-//     let mut last_percentage = 0;
-
-
-//     for chunk in input.chunks_exact(2) {
-//         if let [start, count] = [chunk[0], chunk[1]] {
-//             for i in 0..count {
-//                 if let Some(elem) = result.get_mut(current_index) {
-//                     *elem = start + i;
-//                 } else {
-//                     result.push(start + i);
-//                 }
-//                 current_index += 1;
-//                 // Calculate current percentage
-//                 let current_percentage = (current_index * 100 / total_size) as u64;
-//                 if current_percentage != last_percentage {
-//                     bar.set_position(current_percentage);
-//                     last_percentage = current_percentage;
-//                 }
-//             }
-//         }
-        
-//     }
-
-//     bar.finish_with_message("Processing complete");
-
-//     result
-// }
-
 fn parse_input(input: &str) -> Data {
     let mut lines = input.lines();
     
@@ -85,19 +28,13 @@ fn parse_input(input: &str) -> Data {
         .map(|num| num.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
     
-    // Make every 2nd seed number the sum of the previous 2 seed numbers
+    // Make every 2nd seed number the sum of the previous 2 seed numbers for easier calculations
     let mut i = 1;
     while i < seeds.len() {
         seeds[i] = seeds[i-1] + seeds[i];
         i+=2;
     }
     
-    // Calculate total seed number
-    // let total_seed_number = calculate_total_seed_number(seeds.clone());
-    // println!("Total seed number: {}", total_seed_number);
-    // let mut all_seeds = generate_seed_numbers(seeds.clone());
-    // println!("Length of all seeds: {}", all_seeds.len());
-
     // Parse converters
     let mut converters = Vec::new();
     let mut maps = Vec::new();
@@ -163,7 +100,7 @@ pub fn solve(input: &str) -> i32 {
     
     // Loop through the converters
     let printJ = 4;
-    //println!("Starting state         : {:?}", seeds);
+    println!("Starting state         : {:?}", seeds);
 
     // Loop through the converters
     for (j,converter) in data.converters.iter().enumerate() {
@@ -226,9 +163,7 @@ pub fn solve(input: &str) -> i32 {
                 state.push(seed_end);
 
                 println!("No map found. Seed: {} {}. Missing: {} {}", seed_start, seed_end, seed_start, seed_end);
-                
             }
-
             i+=2;
         }
 
