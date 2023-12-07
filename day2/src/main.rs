@@ -1,85 +1,40 @@
-#[derive(Debug, Clone, Copy)]
-struct Grab {
-    red: u32,
-    green: u32,
-    blue: u32,
-}
+use color_eyre::Report;
+use std::{env, fs, time::Instant};
 
-// Set the values of colors to zero by default because not all grabs have all colors
-impl Default for Grab {
-    fn default() -> Self {
-        Grab {
-            red: 0,
-            green: 0,
-            blue: 0,
-        }
-    }
-}
+// Importing the part1 and part2 modules
+mod part1;
+mod part2;
 
-#[derive(Debug)]
-struct Game {
-    grabs: Vec<Grab>,
-}
-
-fn parse_grabs(input: Vec<&str>) -> Vec<Grab> {
-    input.iter().map(|grab_str| {
-        let mut grab = Grab::default();
-        // Split the string into the colors and iterate over them
-        for part in grab_str.split(", ") {
-            let parts: Vec<&str> = part.split_whitespace().collect();
-            if parts.len() == 2 {
-                let value = parts[0].parse::<u32>().unwrap_or(0);
-                match parts[1] {
-                    "red" => grab.red = value,
-                    "green" => grab.green = value,
-                    "blue" => grab.blue = value,
-                    _ => {} // Handle unexpected color
-                }
-            }
-        }
-        grab
-    }).collect()
-}
-
-fn main() -> color_eyre::Result<()> {
+fn main() -> Result<(), Report> {
     color_eyre::install()?;
-    // First parse the input into a usable format
 
-    // Vector to hold the game data
-    let mut games = Vec::new();
-
-    // Enumerate over the lines so we can access the index which is also the game number
-    for line in include_str!("input.txt").lines() { 
-        // Remove the "Game: " prefix and split the grabs into a vector
-        let raw_grabs = line.split(": ").nth(1).unwrap().split("; ").collect::<Vec<_>>();
-        // Parse the grabs into a vector of Grab structs
-        let grabs = parse_grabs(raw_grabs);
-        // Add the game to the games vector
-        games.push(Game { grabs });
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 3 {
+        eprintln!("Usage: ./{} <part1|part2> <test|input>", args[0].split("/").last().unwrap());
+        std::process::exit(1);
     }
+    let part = &args[1];
 
-    // Then loop over the data to find the valid games
-    let mut id_sum = 0;
-    let mut total_power_sum = 0;
+    // Concatenate ".txt" to the filename provided in the command line argument
+    let filename = format!("{}.txt", args[2]);
 
-    for (index, game) in games.iter().enumerate() {
-        let (max_red, max_green, max_blue) = game.grabs.iter().fold((0, 0, 0), |(max_red, max_green, max_blue), grab| {
-            (
-                max_red.max(grab.red),
-                max_green.max(grab.green),
-                max_blue.max(grab.blue),
-            )
-        });
-                
-        total_power_sum += max_red * max_green * max_blue;
+    // Read the content of the file
+    let input = fs::read_to_string(filename)?;
 
-        // Rewritten first part solution
-        if max_red <= 12 && max_green <= 13 && max_blue <= 14 {
-            id_sum += index+1;
+    let start = Instant::now();
+    let result = match part.as_str() {
+        "part1" => part1::solve(&input),
+        "part2" => part2::solve(&input),
+        _ => {
+            eprintln!("Invalid argument for part: use 'part1' or 'part2'");
+            std::process::exit(1);
         }
-    }
-    println!("ID sum: {}", id_sum);
-    println!("Power sum: {}", total_power_sum);
-    
+    };
+
+    println!("\nResult: {}", result);
+
+    let duration = start.elapsed();
+    println!("Time taken: {:?}", duration.as_micros());
+
     Ok(())
 }

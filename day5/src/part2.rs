@@ -99,7 +99,7 @@ pub fn solve(input: &str) -> i32 {
     }
     
     // Loop through the converters
-    let printJ = 4;
+    let print_j = 4;
     println!("Starting state         : {:?}", seeds);
 
     // Loop through the converters

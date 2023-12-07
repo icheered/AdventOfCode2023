@@ -66,7 +66,7 @@ fn ripple_clean(grid: &mut Vec<Vec<char>>, row: usize, col: usize) {
     }
 }
 
-
+#[allow(dead_code)]
 fn display_grid(grid: &Vec<Vec<char>>) {
     for line in grid {
         for c in line {
