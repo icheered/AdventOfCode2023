@@ -106,10 +106,6 @@ pub fn solve(input: &str) -> i32 {
         }
     });
 
-    for hand in hands.iter() {
-        println!("{:?}", hand);
-    }
-
     // Calculate total score by multiplying index+1 by bid
     let total_score = hands.iter().enumerate().fold(0, |acc, (index, hand)| acc + (index as i32 + 1) * hand.bid);
 
