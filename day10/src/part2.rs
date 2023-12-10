@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use colored::*;
-
+//use colored::*;
 
 #[derive(Debug, Eq, Hash, PartialEq, Copy, Clone)]
 enum Direction {
@@ -104,7 +103,6 @@ fn get_char_at(grid: &Vec<Vec<char>>, point: &Point) -> char {
 }
 
 
-
 #[allow(unused_variables)]
 pub fn solve(input: &str) -> i64 {
     let grid = parse_input(input);
@@ -144,12 +142,13 @@ pub fn solve(input: &str) -> i64 {
     //println!("valid_starting_directions: {:?}", valid_starting_directions);
 
     // Create an empty grid to fill in with the path
-    let mut path = grid.clone();
-    for line in &mut path {
-        for c in line {
-            *c = '.';
-        }
-    }
+    // let mut path = grid.clone();
+    // for line in &mut path {
+    //     for c in line {
+    //         *c = '.';
+    //     }
+    // }
+    let mut path = vec![vec!['.'; grid[0].len()]; grid.len()];
     path[current_position.y as usize][current_position.x as usize] = 'S';
 
     // Fill in the path
