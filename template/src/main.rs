@@ -31,9 +31,8 @@ fn main() -> Result<(), Report> {
         }
     };
 
-    println!("\nResult: {}", result);
-
     let duration = start.elapsed();
+    println!("\nResult: {}", result);
     println!("Time taken: {:?}", duration.as_micros());
 
     Ok(())
