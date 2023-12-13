@@ -3,7 +3,7 @@ fn parse_input(input: &str) -> Vec<Vec<Vec<Object>>> {
     let mut patterns = Vec::new();
     let mut current_pattern = Vec::new();
     for line in input.lines() {
-        if(line.is_empty()) {
+        if line.is_empty() {
             patterns.push(current_pattern);
             current_pattern = Vec::new();
         } else {
@@ -52,7 +52,7 @@ fn get_mirror_index_horizontal(pattern: &Vec<Vec<Object>>) -> i32 {
                             found_mirror = false;
                         }
                     } else {
-                        return (mirror_index as i32) + 1;
+                        return (i as i32) + 1;
                     }
                     if found_mirror {
                         mirror_index += 1;
@@ -100,20 +100,25 @@ pub fn solve(input: &str) -> i64 {
             }
             println!()
         }
-        println!()
+        println!();
+        println!("Transposed:");
+        for row in transpose(pattern.to_vec()) {
+            for object in row {
+                match object {
+                    Object::Ash => print!("."),
+                    Object::Rock => print!("#"),
+                }
+            }
+            println!()
+        }
     }
 
     let mirror_indices_horizontal = patterns.iter().map(|pattern| get_mirror_index_horizontal(pattern)).collect::<Vec<i32>>();
-    
-
-    // Multiply each number in horizontal array with 100 and sum
     let horizontal_sum = mirror_indices_horizontal.iter().sum::<i32>();
-    
-
     let mirror_indices_vertical = patterns.iter().map(|pattern| get_mirror_index_horizontal(&transpose(pattern.to_vec()))).collect::<Vec<i32>>();
-    
-    // Sum each number in the vertical array
     let vertical_sum = mirror_indices_vertical.iter().sum::<i32>();
+
+
     println!("Horizontal: {:?}", mirror_indices_horizontal);
     println!("Vertical:   {:?}", mirror_indices_vertical);
     println!("Horizontal sum: {}", horizontal_sum);
