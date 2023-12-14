@@ -33,86 +33,66 @@ fn parse_input(input: &str) -> Vec<Vec<Object>> {
 }
 
 fn move_circles(grid: &mut Vec<Vec<Object>>, direction: Direction) {
-    // Move circle in direction until it hits another circle or square
     match direction {
         Direction::Up => {
-            for i in 0..grid.len() {
-                for j in 0..grid[i].len() {
+            for j in 0..grid[0].len() {
+                let mut empty_row = 0;
+                for i in 0..grid.len() {
                     if grid[i][j] == Object::Circle {
-                        if i == 0 {
-                            // Circle is at the top of the grid, so it can't move up
-                            continue;
-                        }
-
-                        // Move circle in up direction until it hits another circle or square
-                        let mut k = i;
-                        while k > 0 && grid[k - 1][j] == Object::Empty {
-                            grid[k][j] = Object::Empty;
-                            grid[k - 1][j] = Object::Circle;
-                            k -= 1;
-                        }
+                        grid[i][j] = Object::Empty;
+                        grid[empty_row][j] = Object::Circle;
+                        empty_row += 1;
+                    } else if grid[i][j] == Object::Square {
+                        empty_row = i + 1;
                     }
                 }
             }
         }
         Direction::Left => {
-            // Loop through the grid from left to right, top to bottom
             for i in 0..grid.len() {
+                let mut empty_col = 0;
                 for j in 0..grid[i].len() {
                     if grid[i][j] == Object::Circle {
-                        if j == 0 {
-                            // Circle is at the left of the grid, so it can't move left
-                            continue;
-                        }
-
-                        // Move circle in left direction until it hits another circle or square
-                        let mut k = j;
-                        while k > 0 && grid[i][k - 1] == Object::Empty {
-                            grid[i][k] = Object::Empty;
-                            grid[i][k - 1] = Object::Circle;
-                            k -= 1;
-                        }
+                        grid[i][j] = Object::Empty;
+                        grid[i][empty_col] = Object::Circle;
+                        empty_col += 1;
+                    } else if grid[i][j] == Object::Square {
+                        empty_col = j + 1;
                     }
                 }
             }
         }
         Direction::Down => {
-            // Loop through the grid from bottom to top, left to right
-            for i in (0..grid.len()).rev() {
-                for j in (0..grid[i].len()).rev() {
+            for j in 0..grid[0].len() {
+                let mut empty_row = grid.len() - 1;
+                for i in (0..grid.len()).rev() {
                     if grid[i][j] == Object::Circle {
-                        if i == grid.len() - 1 {
-                            // Circle is at the bottom of the grid, so it can't move down
-                            continue;
+                        grid[i][j] = Object::Empty;
+                        grid[empty_row][j] = Object::Circle;
+                        if empty_row > 0 {
+                            empty_row -= 1;
                         }
-
-                        // Move circle in down direction until it hits another circle or square
-                        let mut k = i;
-                        while k < grid.len() - 1 && grid[k + 1][j] == Object::Empty {
-                            grid[k][j] = Object::Empty;
-                            grid[k + 1][j] = Object::Circle;
-                            k += 1;
+                    } else if grid[i][j] == Object::Square {
+                        if i > 0 {
+                            empty_row = i - 1;
                         }
                     }
                 }
             }
         }
         Direction::Right => {
-            // Loop through the grid from right to left, bottom to top
-            for i in (0..grid.len()).rev() {
+            for i in 0..grid.len() {
+                let mut empty_col = grid[i].len() - 1;
                 for j in (0..grid[i].len()).rev() {
                     if grid[i][j] == Object::Circle {
-                        if j == grid[i].len() - 1 {
-                            // Circle is at the right of the grid, so it can't move right
-                            continue;
+                        grid[i][j] = Object::Empty;
+                        grid[i][empty_col] = Object::Circle;
+                        if empty_col > 0 {
+                            empty_col -= 1;
                         }
-
-                        // Move circle in right direction until it hits another circle or square
-                        let mut k = j;
-                        while k < grid[i].len() - 1 && grid[i][k + 1] == Object::Empty {
-                            grid[i][k] = Object::Empty;
-                            grid[i][k + 1] = Object::Circle;
-                            k += 1;
+                    } else if grid[i][j] == Object::Square {
+                        if j > 0 {
+                            empty_col = j - 1;
                         }
                     }
                 }
