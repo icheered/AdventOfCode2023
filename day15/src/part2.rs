@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Instruction {
     label: String,
@@ -17,9 +19,9 @@ struct Box {
 }
 
 fn get_hash(input: &str) -> u16 {
-    input
-        .chars()
-        .fold(0, |acc, c| ((acc + c as u16) * 17) % 256)
+    input.chars().fold(0, |acc, c| {
+        ((acc.wrapping_add(c as u16)).wrapping_mul(17)) & 0xFF
+    })
 }
 
 fn parse_input(input: &str) -> Vec<Instruction> {
@@ -28,33 +30,36 @@ fn parse_input(input: &str) -> Vec<Instruction> {
     // If ends in -, instruction(characters, hash(characters before -), false, 0)
     // Else split on = instruction(characters, hash(characters before =), false, number after =)
 
-    // abc=5,def-
+    let parts: Vec<&str> = input.split(',').collect();
+    let mut instructions = Vec::with_capacity(parts.len());
 
-    input
-        .split(',')
-        .map(|item| {
-            let (label, lens) = if item.ends_with('-') {
-                (item[..item.len() - 1].to_string(), 0)
-            } else {
-                let parts: Vec<&str> = item.split('=').collect();
-                (
-                    parts[0].to_string(),
-                    parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0),
-                )
-            };
+    for item in parts {
+        let end_char = item.chars().last().unwrap_or_default();
+        let (label, lens) = if end_char == '-' {
+            (item[..item.len() - 1].to_string(), 0)
+        } else {
+            let split_at = item.find('=').unwrap_or(item.len());
+            (
+                item[..split_at].to_string(),
+                item.get(split_at + 1..)
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0),
+            )
+        };
 
-            Instruction {
-                label: label.clone(),
-                hash: get_hash(label.as_str()),
-                lens,
-            }
-        })
-        .collect::<Vec<Instruction>>()
+        let hash = get_hash(&label);
+
+        instructions.push(Instruction { label, hash, lens });
+    }
+
+    instructions
 }
 
 #[allow(unused_variables)]
 pub fn solve(input: &str) -> i64 {
+    // let t1 = Instant::now();
     let instructions = parse_input(input);
+    // let t2 = Instant::now();
 
     // Create a vector of 255 boxes
     let mut boxes: Vec<Box> = (0..256).map(|_| Box { lenses: Vec::new() }).collect();
@@ -95,9 +100,10 @@ pub fn solve(input: &str) -> i64 {
             });
         }
     }
+    // let t3 = Instant::now();
 
     // Calculate focus power
-    boxes
+    let focus_power = boxes
         .iter()
         .enumerate()
         .fold(0, |acc, (box_index, box_item)| {
@@ -110,5 +116,12 @@ pub fn solve(input: &str) -> i64 {
                         lens.lens as i64 * (lens_index + 1) as i64 * (box_index + 1) as i64;
                     acc + focus_power
                 })
-        })
+        });
+
+    let t4 = Instant::now();
+    // println!("Parse input: {:?}", t2.duration_since(t1));
+    // println!("Process input: {:?}", t3.duration_since(t2));
+    // println!("Calculate focus power: {:?}", t4.duration_since(t3));
+
+    focus_power
 }
