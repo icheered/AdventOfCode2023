@@ -1,3 +1,6 @@
+use std::io::{self, Write};
+use std::{thread, time};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Object {
     Empty,
@@ -5,6 +8,10 @@ enum Object {
     Horizontal,
     Slash,
     Backslash,
+    Right,
+    Left,
+    Up,
+    Down,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,21 +46,6 @@ fn parse_input(input: &str) -> Vec<Vec<Object>> {
         grid.push(row);
     }
     grid
-}
-
-fn print_grid(grid: &Vec<Vec<Object>>) {
-    for row in grid {
-        for c in row {
-            match c {
-                Object::Empty => print!("."),
-                Object::Vertical => print!("|"),
-                Object::Horizontal => print!("-"),
-                Object::Slash => print!("/"),
-                Object::Backslash => print!("\\"),
-            }
-        }
-        println!();
-    }
 }
 
 fn get_position(
@@ -149,6 +141,8 @@ fn step(grid: &Vec<Vec<Object>>, position: Position) -> Vec<Position> {
                     positions.push(new_position);
                 }
             }
+            // For other cases, do nothing
+            _ => {}
         },
         Direction::Down => match grid[position.y][position.x] {
             Object::Empty | Object::Vertical => {
@@ -184,6 +178,8 @@ fn step(grid: &Vec<Vec<Object>>, position: Position) -> Vec<Position> {
                     positions.push(new_position);
                 }
             }
+            // For other cases, do nothing
+            _ => {}
         },
         Direction::Left => match grid[position.y][position.x] {
             Object::Empty | Object::Horizontal => {
@@ -219,6 +215,8 @@ fn step(grid: &Vec<Vec<Object>>, position: Position) -> Vec<Position> {
                     positions.push(new_position);
                 }
             }
+            // For other cases, do nothing
+            _ => {}
         },
         Direction::Right => match grid[position.y][position.x] {
             Object::Empty | Object::Horizontal => {
@@ -254,6 +252,8 @@ fn step(grid: &Vec<Vec<Object>>, position: Position) -> Vec<Position> {
                     positions.push(new_position);
                 }
             }
+            // For other cases, do nothing
+            _ => {}
         },
     }
     positions
@@ -270,10 +270,33 @@ fn update_visited_grid(
     }
 }
 
+fn print_grid(grid: &Vec<Vec<Object>>) {
+    for row in grid {
+        for c in row {
+            match c {
+                Object::Empty => print!("\x1B[1m\x1B[38;5;0m.\x1B[0m"), // Bold, dark gray for Empty
+                Object::Vertical => print!("\x1B[1m\x1B[38;5;7m|\x1B[0m"), // Bold, white for Vertical
+                Object::Horizontal => print!("\x1B[1m\x1B[38;5;7m-\x1B[0m"), // Bold, white for Horizontal
+                Object::Slash => print!("\x1B[1m\x1B[38;5;7m/\x1B[0m"), // Bold, white for Slash
+                Object::Backslash => print!("\x1B[1m\x1B[38;5;7m\\\x1B[0m"), // Bold, white for Backslash
+                Object::Right => print!("\x1B[1m\x1B[38;5;1m>\x1B[0m"),      // Bold, red for Right
+                Object::Left => print!("\x1B[1m\x1B[38;5;1m<\x1B[0m"),       // Bold, red for Left
+                Object::Up => print!("\x1B[1m\x1B[38;5;1m^\x1B[0m"),         // Bold, red for Up
+                Object::Down => print!("\x1B[1m\x1B[38;5;1mv\x1B[0m"),       // Bold, red for Down
+            }
+        }
+        println!(); // Move to the next line after printing each row
+    }
+}
+
 #[allow(unused_variables)]
 pub fn solve(input: &str) -> i64 {
     let grid = parse_input(input);
-    print_grid(&grid);
+    let mut visual_grid = grid.clone();
+    io::stdout().flush().unwrap();
+
+    let start_row = 2; // assuming grid starts from the first row of the terminal
+    let start_col = 1; // assuming grid starts from the first column of the terminal
 
     // Visited cells
     let mut visited = [[false; 200]; 200];
@@ -293,17 +316,26 @@ pub fn solve(input: &str) -> i64 {
 
     loop {
         update_visited_grid(&mut visited, &mut visited_positions, &positions);
-        // Print visited grid
-        // for i in 0..grid.len() {
-        //     for j in 0..grid[i].len() {
-        //         if visited[i][j] {
-        //             print!("X");
-        //         } else {
-        //             print!(" ");
-        //         }
-        //     }
-        //     println!();
-        // }
+        thread::sleep(time::Duration::from_millis(100));
+        for position in &positions {
+            match position.direction {
+                Direction::Up => {
+                    visual_grid[position.y][position.x] = Object::Up;
+                }
+                Direction::Down => {
+                    visual_grid[position.y][position.x] = Object::Down;
+                }
+                Direction::Left => {
+                    visual_grid[position.y][position.x] = Object::Left;
+                }
+                Direction::Right => {
+                    visual_grid[position.y][position.x] = Object::Right;
+                }
+            }
+        }
+        print!("\x1B[{};{}H", start_row, start_col);
+        print_grid(&visual_grid);
+        io::stdout().flush().unwrap();
 
         let mut new_positions = Vec::new();
         for position in positions {
@@ -324,11 +356,6 @@ pub fn solve(input: &str) -> i64 {
         }
         positions = new_positions;
     }
-
-    // println!(
-    //     "Visited cells: {}",
-    //     visited.iter().flatten().filter(|&&x| x).count()
-    // );
 
     // Calculate number of visited squares
     visited
