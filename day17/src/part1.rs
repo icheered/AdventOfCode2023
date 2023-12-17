@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum Direction {
     Up,
     Down,
@@ -10,7 +10,7 @@ enum Direction {
     None,
 }
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Eq, Hash)]
 struct Block {
     x: u16,
     y: u16,
@@ -18,7 +18,7 @@ struct Block {
     total_cost: u16,
     direction: Direction,
     steps: u8,
-    previous: Option<Box<Block>>,
+    previous: Option<Box<Block>>, // REMOVE FOR SPEED (only for plotting path)
 }
 
 // Implementing PartialEq, Eq, Ord, and PartialOrd to use Block in a BinaryHeap
@@ -43,14 +43,30 @@ impl PartialOrd for Block {
 
 fn parse_input(input: &str) -> Vec<Vec<u8>> {
     // Every character is a number representing the cost for that grid
-    input
+    let mut grid = input
         .lines()
         .map(|line| {
             line.chars()
                 .map(|c| c.to_digit(10).unwrap() as u8)
                 .collect()
         })
-        .collect()
+        .collect::<Vec<Vec<u8>>>();
+
+    // input
+    //     .lines()
+    //     .map(|line| {
+    //         line.chars()
+    //             .map(|c| c.to_digit(10).unwrap() as u8)
+    //             .collect()
+    //     })
+    //     .collect()
+
+    // Set first and last block to 0
+    grid[0][0] = 0;
+    let width = grid[0].len();
+    let height = grid.len();
+    grid[height - 1][width - 1] = 0;
+    grid.clone()
 }
 
 fn get_neighbouring_blocks(grid: &Vec<Vec<u8>>, block: &Block) -> Vec<Block> {
@@ -69,7 +85,31 @@ fn get_neighbouring_blocks(grid: &Vec<Vec<u8>>, block: &Block) -> Vec<Block> {
             total_cost: 0,
             direction: Direction::None,
             steps: 0,
-            previous: None, // REMOVE FOR SPEED
+            previous: None, // REMOVE FOR SPEED (only for plotting path)
+        });
+    }
+    // Check if there is a block to the left
+    if x > 0 {
+        neighbours.push(Block {
+            x: block.x - 1,
+            y: block.y,
+            cost: grid[y][x - 1],
+            total_cost: 0,
+            direction: Direction::None,
+            steps: 0,
+            previous: None, // REMOVE FOR SPEED (only for plotting path)
+        });
+    }
+    // Check if there is a block to the right
+    if x < grid[0].len() - 1 {
+        neighbours.push(Block {
+            x: block.x + 1,
+            y: block.y,
+            cost: grid[y][x + 1],
+            total_cost: 0,
+            direction: Direction::None,
+            steps: 0,
+            previous: None, // REMOVE FOR SPEED (only for plotting path)
         });
     }
 
@@ -82,42 +122,24 @@ fn get_neighbouring_blocks(grid: &Vec<Vec<u8>>, block: &Block) -> Vec<Block> {
             total_cost: 0,
             direction: Direction::None,
             steps: 0,
-            previous: None, // REMOVE FOR SPEED
-        });
-    }
-
-    // Check if there is a block to the left
-    if x > 0 {
-        neighbours.push(Block {
-            x: block.x - 1,
-            y: block.y,
-            cost: grid[y][x - 1],
-            total_cost: 0,
-            direction: Direction::None,
-            steps: 0,
-            previous: None, // REMOVE FOR SPEED
-        });
-    }
-
-    // Check if there is a block to the right
-    if x < grid[0].len() - 1 {
-        neighbours.push(Block {
-            x: block.x + 1,
-            y: block.y,
-            cost: grid[y][x + 1],
-            total_cost: 0,
-            direction: Direction::None,
-            steps: 0,
-            previous: None, // REMOVE FOR SPEED
+            previous: None, // REMOVE FOR SPEED (only for plotting path)
         });
     }
 
     neighbours
 }
 
-#[allow(unused_variables)]
+fn is_reverse_direction(dir1: Direction, dir2: Direction) -> bool {
+    match (dir1, dir2) {
+        (Direction::Up, Direction::Down) | (Direction::Down, Direction::Up) => true,
+        (Direction::Left, Direction::Right) | (Direction::Right, Direction::Left) => true,
+        _ => false,
+    }
+}
+
 pub fn solve(input: &str) -> i64 {
-    let grid = parse_input(input);
+    let grid = parse_input(input); // Assuming parse_input is already defined
+
     let mut queue = BinaryHeap::new();
     queue.push(Block {
         x: 0,
@@ -132,33 +154,23 @@ pub fn solve(input: &str) -> i64 {
     let mut visited = HashSet::new();
 
     while let Some(current_block) = queue.pop() {
-        // Check if we have visited this block already
-        if visited.contains(&(current_block.x, current_block.y)) {
+        if visited.contains(&(current_block.x, current_block.y, current_block.direction)) {
             continue;
         }
-        visited.insert((current_block.x, current_block.y));
+        visited.insert((current_block.x, current_block.y, current_block.direction));
 
-        // Check if we reached the bottom right corner
         if usize::from(current_block.x) == grid[0].len() - 1
             && usize::from(current_block.y) == grid.len() - 1
         {
-            println!("Reached bottom right corner");
-            println!("Total cost: {}", current_block.total_cost);
-            println!("Steps: {}", current_block.steps);
+            let total_cost = current_block.total_cost;
 
-            // Inside your condition to check the bottom right corner
             let mut path = Vec::new();
             let mut block = Some(current_block);
-
             while let Some(current) = block {
                 path.push((current.x, current.y));
                 block = current.previous.map(|b| *b);
             }
 
-            path.reverse(); // Reverse the path to start from the beginning
-
-            // Print or plot the path
-            // Print the grid with the path highlighted
             for y in 0..grid.len() {
                 for x in 0..grid[0].len() {
                     if path.contains(&(x as u16, y as u16)) {
@@ -169,37 +181,31 @@ pub fn solve(input: &str) -> i64 {
                 }
                 println!();
             }
-
-            break;
+            return total_cost as i64;
         }
 
-        // Get neighbouring blocks
-        let neighbours = get_neighbouring_blocks(&grid, &current_block);
-
-        // Add neighbours to queue
         for neighbour in get_neighbouring_blocks(&grid, &current_block) {
-            if !visited.contains(&(neighbour.x, neighbour.y)) {
-                let mut direction = Direction::None;
-                let mut steps = 1;
+            let mut direction = Direction::None;
+            if neighbour.x > current_block.x {
+                direction = Direction::Right;
+            } else if neighbour.x < current_block.x {
+                direction = Direction::Left;
+            } else if neighbour.y > current_block.y {
+                direction = Direction::Down;
+            } else if neighbour.y < current_block.y {
+                direction = Direction::Up;
+            }
 
-                if neighbour.x > current_block.x {
-                    direction = Direction::Right;
-                } else if neighbour.x < current_block.x {
-                    direction = Direction::Left;
-                } else if neighbour.y > current_block.y {
-                    direction = Direction::Down;
-                } else if neighbour.y < current_block.y {
-                    direction = Direction::Up;
-                }
+            let steps = if direction == current_block.direction {
+                current_block.steps + 1
+            } else {
+                1
+            };
 
-                // Check if the direction is the same and step count is within limit
-                if !(direction == current_block.direction && current_block.steps >= 3) {
-                    steps = if direction == current_block.direction {
-                        current_block.steps + 1
-                    } else {
-                        1
-                    };
-
+            if !(direction == current_block.direction && steps > 3)
+                && !is_reverse_direction(direction, current_block.direction)
+            {
+                if !visited.contains(&(neighbour.x, neighbour.y, direction)) {
                     queue.push(Block {
                         x: neighbour.x,
                         y: neighbour.y,
@@ -207,7 +213,7 @@ pub fn solve(input: &str) -> i64 {
                         total_cost: current_block.total_cost + neighbour.cost as u16,
                         direction: direction,
                         steps: steps,
-                        previous: Some(Box::new(current_block.clone())), // REMOVE FOR SPEED
+                        previous: Some(Box::new(current_block.clone())), // Consider removing for speed
                     });
                 }
             }
