@@ -274,7 +274,7 @@ fn print_grid(grid: &Vec<Vec<Object>>) {
     for row in grid {
         for c in row {
             match c {
-                Object::Empty => print!("\x1B[1m\x1B[38;5;0m.\x1B[0m"), // Bold, dark gray for Empty
+                Object::Empty => print!("\x1B[1m\x1B[38;5;2m.\x1B[0m"), // Bold, dark gray for Empty
                 Object::Vertical => print!("\x1B[1m\x1B[38;5;7m|\x1B[0m"), // Bold, white for Vertical
                 Object::Horizontal => print!("\x1B[1m\x1B[38;5;7m-\x1B[0m"), // Bold, white for Horizontal
                 Object::Slash => print!("\x1B[1m\x1B[38;5;7m/\x1B[0m"), // Bold, white for Slash
@@ -316,22 +316,28 @@ pub fn solve(input: &str) -> i64 {
 
     loop {
         update_visited_grid(&mut visited, &mut visited_positions, &positions);
-        thread::sleep(time::Duration::from_millis(100));
+        let mut update = false;
         for position in &positions {
-            match position.direction {
-                Direction::Up => {
-                    visual_grid[position.y][position.x] = Object::Up;
-                }
-                Direction::Down => {
-                    visual_grid[position.y][position.x] = Object::Down;
-                }
-                Direction::Left => {
-                    visual_grid[position.y][position.x] = Object::Left;
-                }
-                Direction::Right => {
-                    visual_grid[position.y][position.x] = Object::Right;
+            if grid[position.y][position.x] == Object::Empty {
+                update = true;
+                match position.direction {
+                    Direction::Up => {
+                        visual_grid[position.y][position.x] = Object::Up;
+                    }
+                    Direction::Down => {
+                        visual_grid[position.y][position.x] = Object::Down;
+                    }
+                    Direction::Left => {
+                        visual_grid[position.y][position.x] = Object::Left;
+                    }
+                    Direction::Right => {
+                        visual_grid[position.y][position.x] = Object::Right;
+                    }
                 }
             }
+        }
+        if update {
+            thread::sleep(time::Duration::from_millis(10));
         }
         print!("\x1B[{};{}H", start_row, start_col);
         print_grid(&visual_grid);
